@@ -1,0 +1,31 @@
+---
+# tasks file for roles/ansible-role-wordpress
+- name: "INSTALL - packages"
+  package:
+    name: "{{ _wordpress__packages }}"
+    state: present
+
+- name: "INSTALL - python dependencies"
+  pip:
+    name: "{{ item }}"
+  loop: "{{ _wordpress_pip_packages }}"
+
+- name: Ensure all path are created
+  file:
+    path: '{{ item.path }}'
+    state: '{{ item.state }}'
+    mode: 0777
+  loop:
+    - { path: "{{ _wordpress_app__dir }}", state: directory }
+    - { path: "{{ _wordpress_app__path }}", state: directory }
+    - { path: "{{ _wordpress_app__path__env }}", state: directory }
+
+- name: 'INIT | Pulling the source code of the stack from GITLAB'
+  import_tasks: "{{ role_path }}/tasks/pull.yml"
+
+- name: 'CONFIG | Templating configuration file for docker(.env)'
+  import_tasks: "{{ role_path }}/tasks/config.yml"
+
+
+- name: 'INIT | Execution the stack of containers'
+  import_tasks: "{{ role_path }}/tasks/stack.yml"

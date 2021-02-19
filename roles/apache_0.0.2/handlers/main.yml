@@ -1,0 +1,12 @@
+---
+# handlers file for roles/apache_0.0.1
+- name: Reload apache
+  ansible.builtin.service:
+    name: "{{ apache_service }}"
+    enabled: yes
+    state: reloaded
+
+- name: reload firewalld
+  ansible.builtin.service:
+    name: "{{ firewalld_service }}"
+    state: reloaded

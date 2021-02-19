@@ -1,0 +1,101 @@
+---
+- name: PLAY Deploiement web
+  hosts: web
+  become: true
+
+  vars:
+    liste_pkg:
+      - git
+      - vim
+      - apache2=2.4.38-3+deb10u4
+      - aptitude
+    appli_enable: present
+    mon_appli_port: 80
+    mon_appli: formation
+
+  tasks:
+    - name: Installation des package requis
+      ansible.builtin.apt:
+        pkg: "{{ liste_pkg }}"
+        install_recommends: no
+        state: "{{ appli_enable }}"
+        update_cache: yes
+        purge: yes
+
+    - name: Modification du fichier de configuration global apache2
+      ansible.builtin.lineinfile:
+        backup: yes
+        validate: /usr/sbin/apachectl -t -f %s
+        path: /etc/apache2/apache2.conf
+        regexp: '^LogLevel'
+        line: LogLevel info
+      notify:
+        - Reload apache2
+
+    - name: Creation de l'arborescence d'accueil du site
+      ansible.builtin.file:
+        path: "/var/www/{{ mon_appli }}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Deploiement du virtualHost
+      template:
+        src: template/mon_appli.conf.j2
+        dest: "/etc/apache2/sites-available/{{ mon_appli }}.conf"
+        owner: root
+        group: root
+        mode: 0644
+        validate: /usr/sbin/apachectl -t -f %s
+      notify:
+        - Reload apache2
+
+    - name: Desactivation du virtualHost par defaut
+      command: "a2dissite 000-default.conf"
+      args:
+        creates: /var/www/{{ mon_appli }}/deploy_ok
+
+    - name: Activation du virtualHost pour appli
+      command: "a2ensite {{ mon_appli }}.conf"
+      args:
+        creates: /var/www/{{ mon_appli }}/deploy_ok
+
+    #- name: Copie d'un fichier static dans le site
+    #  ansible.builtin.copy :
+    #    dest: "/var/www/{{ mon_appli }}/index.html"
+    #    src: index.html
+    #    owner: root
+    #    group: root
+    #    mode: '0644'
+    #  when: appli_enable == 'present'
+    - name: Deploiement d'un template index.html
+      template:
+        src: template/index.html.j2
+        dest: "/var/www/{{ mon_appli }}/index.html"
+        owner: root
+        group: root
+        mode: 0644
+      when: appli_enable == 'present'
+
+    - name: Generation d'un fichier flag de fin de deploiement
+      ansible.builtin.copy:
+        content: ""
+        dest: /var/www/{{ mon_appli }}/deploy_ok
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Suppression du fichier index.html si appli non present
+      ansible.builtin.file:
+        path: /var/www/html/index.html
+        state: absent
+      when: appli_enable != 'present'
+
+  handlers:
+    - name: Reload apache2
+      ansible.builtin.service:
+        name: apache2
+        enabled: yes
+        state: reloaded
+      when: appli_enable == 'present'

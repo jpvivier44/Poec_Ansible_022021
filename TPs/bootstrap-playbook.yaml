@@ -1,0 +1,93 @@
+---
+- name: PLAY BOOTSTRAP
+  hosts: linux
+  become: true
+
+  vars_files:
+    - vars-bootstrap.yaml
+
+  tasks:
+    # Utilisation module RAW pour vérifier et tenter d'installer l'interpreteur python3
+    - name: Vérification interpreteur python
+      raw: 'bash -c "test -f /usr/bin/python3"'
+      ignore_errors: true
+      # Enregistrement de l'output du module dans une variable
+      register: test_python3_output
+
+    - name: Analyse de la donnée test_python3_output
+      ansible.builtin.debug:
+        #msg: "{{ test_python3_output }}"
+        var: test_python3_output
+        verbosity: 2
+
+      #Tente une install python3 QUAND le code retour de test_python3_output n'est pas à 0
+      #Conditionals
+    - name: tentative d'installation python3
+      raw: 'bash -c "(apt-get update && apt install -y python3) || (yum install -y python3)"'
+      when: test_python3_output.rc != 0
+
+    # Realisation d'une task avec le system de delegation
+    - name: Modification du fichier ansible.cfg du manager pour ajouter l'interpreteur python
+      community.general.ini_file:
+        path: ansible.cfg
+        section: defaults
+        option: interpreter_python
+        value: /usr/bin/python3
+        mode: '0600'
+        #backup: yes
+      delegate_to: manager
+
+    # Tasks communes une fois que le prérequis pythonest satisfait
+    - name: Creation d'un user standard avec groupe sudo,wheel
+      ansible.builtin.user:
+        name: formation
+        state: present
+        shell: /bin/bash
+        groups: "{{ sudogrp }}"
+
+    - name: Creation d'utilisateurs standards
+      ansible.builtin.user:
+        name: "{{ item.key }}"
+        state: "{{ item.value.state | default('absent') }}"
+        shell: "{{ item.value.shell | default('/bin/bash') }}"
+        comment: "{{ item.value.comment | default(omit) }}"
+        password: "{{ lookup('password', 'credentials'
+          + '/' + inventory_hostname + '/'
+          + item.key
+          + '.password length=15') | password_hash('sha512') }}"
+        update_password: on_create
+      loop: "{{ liste_users | dict2items }}"
+
+    - name: Installation du serveur openssh (RedHat)
+      yum:
+        name: "{{ ssh_package_list }}"
+        state: present
+      when: ansible_os_family == 'RedHat'
+
+    - name:  Installation du serveur openssh (Debian)
+      apt:
+        name: "{{ ssh_package_list }}"
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Gestion du service sshd
+      ansible.builtin.service:
+        name: sshd
+        state: started
+        enabled: yes
+
+    - name: Mise a jour de la configuration du serveur ssh
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        validate: 'sshd -t -f %s'
+      loop: "{{ regles_ssh }}"
+      notify: reload ssh
+  
+  handlers:
+    - name: reload ssh
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded

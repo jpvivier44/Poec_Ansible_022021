@@ -1,0 +1,22 @@
+---
+# tasks file for roles/require-deploy_0.0.1
+- name: "Ajout de l'utilisateur de deploiement via ansible"
+  ansible.builtin.user:
+    name: deploy
+    state: present
+    shell: /bin/bash
+    password: "{{ deploy_pwd | string | password_hash('sha512') }}"
+
+- name: "Dépose de la clé publique du ansible mgmt chez le user deploy"
+  ansible.posix.authorized_key:
+    user: deploy
+    state: present
+    key: "{{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}"
+
+- name: "Deploiement du fichier de regle sudo pour le user deploy"
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/deploy
+    content: "deploy ALL=(ALL) NOPASSWD:ALL"
+    mode: 0440
+    owner: root
+    group: root

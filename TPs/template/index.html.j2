@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {#   Utilisation de variables magics ! #}
+    <h1> Site deploye par ansible {{ ansible_version.full }} - formation</h1>
+    <h2> Ansible manager : {{ ansible_host }}
+    <h2> Serveur de l'inventaire : {{ inventory_hostname }}
+    # Texte commentaire
+
+    <h2> Application : {{ mon_appli }}
+    {# Commentaire #}
+    <h2> Gateway: {{ ansible_facts.default_ipv4.gateway }} </h2>
+
+        {# Parcourir une variable sous forme de liste #}
+        {% for i in ansible_facts.interfaces %}
+          {% if i != 'lo' %}
+        Interface : {{ i }} => @IP : {{ ansible_facts[i].ipv4.address }}<br/>
+          {% endif %}
+        {% endfor %}
+
+        {% if ansible_facts.os_family == 'Debian' %}
+         OK la distribution est debian <br/>
+        {% endif %}
+
+        {# concatenation #}
+
+        {# Mise en forme : MAJ #}
+        User de deploiement : {{ ansible_facts.virtualization_type |upper}}
+</body>
+</html>

@@ -1,0 +1,62 @@
+- name: Installation des package requis
+  ansible.builtin.apt:
+    pkg: "{{ apache_packages }}"
+    install_recommends: no
+    state: present
+    update_cache: yes
+    purge: yes
+
+- name: Modification du fichier de configuration global apache2
+  ansible.builtin.lineinfile:
+    backup: yes
+    validate: /usr/sbin/apachectl -t -f %s
+    path: "{{ apache_server_conf }}/apache2.conf"
+    regexp: '^LogLevel'
+    line: LogLevel info
+  notify:
+    - Reload apache
+
+- name: Creation de l'arborescence d'accueil du site
+  ansible.builtin.file:
+    path: "/var/www/{{ mon_appli }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Deploiement du virtualHost
+  template:
+    src: mon_appli.conf.j2
+    dest: "{{ apache_server_conf }}/sites-available/{{ mon_appli }}.conf"
+    owner: root
+    group: root
+    mode: 0644
+    validate: /usr/sbin/apachectl -t -f %s
+  notify:
+    - Reload apache
+
+- name: Desactivation du virtualHost par defaut
+  command: "a2dissite 000-default.conf"
+  args:
+    creates: /var/www/{{ mon_appli }}/deploy_ok
+
+- name: Activation du virtualHost pour appli
+  command: "a2ensite {{ mon_appli }}.conf"
+  args:
+    creates: /var/www/{{ mon_appli }}/deploy_ok
+
+- name: Deploiement d'un template index.html
+  template:
+    src: index.html.j2
+    dest: "/var/www/{{ mon_appli }}/index.html"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Generation d'un fichier flag de fin de deploiement
+  ansible.builtin.copy:
+    content: ""
+    dest: /var/www/{{ mon_appli }}/deploy_ok
+    owner: root
+    group: root
+    mode: '0644'

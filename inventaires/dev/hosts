@@ -1,0 +1,5 @@
+[linux:children]
+web
+
+[web]
+dev ansible_ssh_host=172.28.128.8

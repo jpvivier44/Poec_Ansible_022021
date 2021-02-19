@@ -1,0 +1,42 @@
+---
+# vars file for roles/ansible-role-wordpress
+service_name: wordpress
+
+wordpress_images:
+  - service: wordpress
+    name: 'wordpress'
+    version: 'latest'
+    port: '8000'
+    extra_parms:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: psawrd
+      WORDPRESS_DB_PASSWORD: roottoor
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_PORT: 8000
+
+  - service: database
+    name: 'mysql'
+    version: '5.7'
+    extra_parms:
+      MYSQL_ROOT_PASSWORD: somewordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: psawrd
+      MYSQL_PASSWORD: roottoor
+
+_wordpress_app__dir: 'wordpress'
+_wordpress_app__owner: 'root'
+_wordpress_app__group: 'root'
+_wordpress_app__path: "/docker/{{ _wordpress_app__dir }}"
+_wordpress_app__path__env: "/docker/{{ _wordpress_app__dir }}/env"
+_wordpress_app__git_key_path: '/root/.ssh/'
+_wordpress_app__git_key_file: 'ansible'
+_wordpress_app__container_ports:
+  - '443'
+
+_wordpress__packages:
+  - git
+  - python3-pip
+
+_wordpress_pip_packages:
+  - docker
+  - docker-compose

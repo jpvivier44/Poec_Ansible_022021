@@ -1,0 +1,47 @@
+---
+- name: "PLAY 1 - demo utilisation playbook"
+  # Target/Pattern  à qui s'adresse le PLAY
+  hosts: all
+  become: true
+
+  vars:
+    #deploy_pwd: deploy123
+    deploy_pwd: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          34303762623437613164666464346662633766666134333431383438303138653338323665363734
+          3663343630376639313934346238626430626562643433300a633835336131633266363661363430
+          36333061653432323566376665666533666663623931363763316130663465306238376163623761
+          3135626166303762340a303232626231333762343834333537343539313461313163336332653030
+          6536
+    #deploy_pwd: $6$password$QSrnnf58znEKU41eJcN9cgKLOp4gkp5XXR6.j1hiiS9mHH2JhLIkZVNYjSkbYypqVVZR1nlgzeDCTuFzMmpMo0
+
+    #vars_prompt:
+  #  - name: password
+  #    prompt: What is deploy password?
+  #    encrypt: sha512_crypt
+
+  # Déclaration du block tasks : appel des modules ansible
+  tasks:
+    - name: "Ajout de l'utilisateur de deploiement via ansible"
+      ansible.builtin.user:
+        name: deploy
+        state: present
+        shell: /bin/bash
+        password: "{{ deploy_pwd | string | password_hash('sha512') }}"
+        #update_password: on_create
+        #password: "{{ deploy_pwd }}"
+        # 3 - password: "{{ password }}"
+    
+    - name: "Dépose de la clé publique du ansible mgmt chez le user deploy"
+      ansible.posix.authorized_key:
+        user: deploy
+        state: present
+        key: "{{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}"
+
+    - name: "Deploiement du fichier de regle sudo pour le user deploy"
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/deploy
+        content: "deploy ALL=(ALL) NOPASSWD:ALL"
+        mode: 0440
+        owner: root
+        group: root

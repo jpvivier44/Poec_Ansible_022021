@@ -1,0 +1,4 @@
+---
+# defaults file for roles/apache_0.0.1
+mon_appli_port: 80
+mon_appli: formation

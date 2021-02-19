@@ -1,0 +1,46 @@
+- set_fact:
+    __key_file: "{{ _wordpress_app__git_key_path }}/{{ _wordpress_app__git_key_file }}"
+  no_log: True
+
+- name: 'Create .ssh'
+  file:
+    name: "{{ _wordpress_app__git_key_path}}"
+    state: directory
+
+- name: 'Pushing private key file (Gitlab)'
+  copy:
+    dest: '{{ __key_file }}'
+    src: deploy
+    mode: 0600
+  become: true
+
+- name: Pushing config file for service ssh (Gitlab)
+  copy:
+    dest: '/root/.ssh/'
+    src: config
+    mode: 0600
+  become: true
+
+- name: Find existing directory source code
+  find:
+    paths:
+      - "{{ _wordpress_app__path }}/"
+  register: '_stack_projet_dir'
+
+- name: UPDATE | Renaming directory source code
+  command: >-
+    mv {{ _wordpress_app__path }}/ {{ _wordpress_app__path
+        + '.'
+        + '%Y-%m-%d_%H%M%S'|strftime(ansible_date_time.epoch) }}
+
+- name: Cloning sources from gitlab
+  git:
+    repo: "{{ wordpress_app__git_repo }}"
+    dest: "{{ _wordpress_app__path }}"
+    key_file: '{{ __key_file }}'
+    force: "{{ wordpress_app__git_update|bool|d(omit) }}"
+    update: "{{ wordpress_app__git_update|bool|d(omit) }}"
+    version: "{{ wordpress_app__git_release }}"
+  changed_when: false
+  failed_when: false
+  register: git

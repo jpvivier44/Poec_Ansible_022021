@@ -1,0 +1,7 @@
+---
+apache_service: httpd
+apache_packages: httpd
+apache_user: apache
+apache_server_root: /etc/httpd
+apache_server_conf: /etc/httpd/conf.d
+firewalld_service: firewalld

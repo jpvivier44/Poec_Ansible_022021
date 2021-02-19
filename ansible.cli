@@ -1,0 +1,128 @@
+# Lancement du premier playbook
+$ ansible-playbook -i hosts -u vagrant premier_playbook.yaml
+$ ansible-playbook -i hosts -u vagrant premier_playbook.yaml --limit srv01
+
+
+# Arguments supplémentaires au lancement du playbook
+$ ansible-playbook premier_playbook.yaml --check
+$ ansible-playbook premier_playbook.yaml --syntax-check
+$ ansible-playbook premier_playbook.yaml --list-tasks
+$ ansible-playbook premier_playbook.yaml --limit srv01
+
+# Installation du linter ansible dans le virtualenv
+pip uninstall ansible-lint
+pip install ansible-lint==4.3.7
+$ ansible-lint bootstrap-playbook.yaml
+
+# Gestion de l'inventaire
+$ ansible-inventory -i hosts --list -y
+$ ansible-inventory -i hosts --graph
+
+# Lancement du second playbook bootstrap
+$ ansible-playbook bootstrap-playbook.yaml
+
+
+# Boucle - loops
+https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html
+
+
+# Variables spéciales :
+https://docs.ansible.com/ansible/latest/reference_appendices/special_variables.html
+
+
+# Module debug et verbosity
+$ ansible-playbook demo_loop-playbook.yaml -vv
+
+# Les facts
+https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html
+Un task automatique au lancement d'un playbool : TASK [Gathering Facts] 
+Un module : setup
+$ ansible -m ansible.builtin.setup srv01
+$ ansible -m ansible.builtin.setup srv01 -a "filter=*user*"
+
+
+# Conditionnals :
+https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html
+https://docs.ansible.com/ansible/latest/user_guide/playbooks_error_handling.html
+
+# Mot de passe et vault
+1°) Définition du mot de passe directement en variable et hash à l'appel du module user
+2°) Génération d'un mot de passe hashé puis utilisation dans une variable
+$ ansible -i hosts srv01 -m debug -a "msg={{ 'deploy123' | password_hash('sha512', 'password') }}"
+3°) interactive prompt
+https://docs.ansible.com/ansible/latest/user_guide/playbooks_prompts.html
+4°) Vault
+https://docs.ansible.com/ansible/latest/user_guide/vault.html
+https://docs.ansible.com/ansible/2.7/plugins/lookup/hashi_vault.html
+
+    4.1°) Encryption de la valeur (avec saisie d'un mot de passe vault)
+            $ ansible-vault encrypt_string -n deploy_pwd "deploy123"
+    4.2°) Copie du résultat dans le playbook
+    4.3°) Declenchement du playbook avec demande de saisie du mot de passe vault
+            $ ansible-playbook premier_playbook.yaml --ask-vault-pass
+
+$ ansible-vault decrypt vars-bootstrap.yaml
+
+$ ansible-vault encrypt vars-bootstrap.yaml
+
+$ ansible-vault edit vars-bootstrap.yaml
+
+
+## TP1 lance du playbook :
+$ ansible-playbook TPs/tp1-web-playbook.yaml
+$ ansible-playbook TPs/tp1-web-playbook.yaml -e appli_enable=absent
+
+
+## Ansible Handlers : declenchement d'une action suite à un changement
+=> install => config => restart
+Combo : notify => handlers
+
+
+## Template : jinja2 => python
+https://docs.ansible.com/ansible/latest/user_guide/playbooks_filters.html
+https://docs.ansible.com/ansible/latest/user_guide/playbooks_templating.html
+Fichier dynamique qui contient du texte et des variables, facts et code jinja
+
+
+## Systeme de delegation
+https://docs.ansible.com/ansible/latest/user_guide/playbooks_delegation.html
+
+Ex : 
+1°) ajout du node manager ansible_connection=local dans le fichier d'inventaire
+2°) Configuration des droits sudo pour l'utilisateur ansible qui lance les commande
+Ex sudoers : (visudo)
+ansible ALL=(ALL) NOPASSWD:ALL
+3°) test mode adHoc :
+ansible -m ping -b manager
+
+## Module  community.general.ini_file
+$ ansible-galaxy collection install community.general
+
+
+## Les roles ansible
+https://galaxy.ansible.com/
+https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html
+
+###################
+# ANSIBLE GALAXY :
+###################
+binaire qui permet : créer une arbo projet, installer des collections (modules), installer des rôles
+
+$ ansible-galaxy init roles/require-deploy_0.0.1
+$ ansible-galaxy init roles/apache_0.0.1
+
+# Utilisation du fichier requirements.yaml pour lister tous les rôles et leurs déôts distants
+=> Permet d'installer les rôles dans un projet
+$ ansible-galaxy install -p roles/ -r requirements.yml
+=> Deployer un rôle precis
+$ ansible-galaxy install -p roles -r requirements.yml docker_3.0.0
+=> Ignorer les erreurs
+$ ansible-galaxy install -p roles -r requirements.yml --ignore-errors
+
+# Exemple de rôle structuré avec méthode include + facts => permettre une bonne compatibilité et de l'évolution future
+https://github.com/geerlingguy/ansible-role-apache
+
+
+
+# Précedence des variables :
+https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable

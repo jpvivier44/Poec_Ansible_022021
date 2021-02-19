@@ -1,0 +1,24 @@
+manager ansible_connection=local
+
+[linux:children]
+debian
+centos
+
+[debian]
+srv01  ansible_ssh_host=172.28.128.8
+
+[docker]
+srv01
+
+[web]
+srv01
+srv02
+
+[centos]
+srv02  ansible_ssh_host=172.28.128.9
+
+[debian:vars]
+sudogrp=sudo
+color_site=red
+[centos:vars]
+sudogrp=wheel

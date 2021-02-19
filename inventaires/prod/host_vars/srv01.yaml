@@ -1,0 +1,3 @@
+color_site: red
+docker_users:
+ - deploy

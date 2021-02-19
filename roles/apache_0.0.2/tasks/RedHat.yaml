@@ -1,0 +1,28 @@
+---
+
+- name: Installation packages apache sur RedHat
+  ansible.builtin.yum:
+    name: "{{ apache_packages }}"
+    state: present
+
+- name: Gestion du service firewalld
+  ansible.builtin.service:
+    name: "{{ firewalld_service }}"
+    state: started
+    enabled: yes
+
+- name: Activation d'une regle firewalld pour http
+  ansible.posix.firewalld:
+    service: http
+    permanent: yes
+    state: enabled
+  notify:
+    - reload firewalld
+
+- name: Deploiement d'un template index.html
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+    owner: "{{ apache_user }}"
+    group : "{{ apache_user }}"
+    mode: 0644

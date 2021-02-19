@@ -1,0 +1,18 @@
+---
+# tasks file for roles/apache_0.0.1
+
+
+# Utilisation de include_vars et include_tasks
+# Permet d'inclure des fichiers spécifiques hors main.yaml
+
+- name: Include des variable par distribution
+  include_vars: "{{ ansible_facts.os_family }}.yaml"
+
+- name: Include des tasks par distribution
+  include_tasks: "{{ ansible_facts.os_family }}.yaml"
+
+- name: Gestion du servive apache
+  ansible.builtin.service:
+    name: "{{ apache_service }}"
+    state: started
+    enabled: yes

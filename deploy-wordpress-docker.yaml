@@ -1,0 +1,7 @@
+---
+- name: PLAY - Deploy docker stack wordpress
+  hosts: docker
+  become: true
+
+  roles:
+    - ansible-role-wordpress

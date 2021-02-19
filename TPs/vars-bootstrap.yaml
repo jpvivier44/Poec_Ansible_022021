@@ -1,0 +1,21 @@
+---
+liste_users:
+  testuser1:
+    state: present
+    shell: /bin/bash
+    comment: "User test 1"
+  testuser2:
+    state: present
+    shell: /bin/bash
+  pierre:
+    state: present
+  gege:
+
+ssh_package_list: openssh-server
+ssh_service_name: sshd
+
+regles_ssh:
+  - regexp: '^LogLevel'
+    line: 'LogLevel INFO'
+  - regexp: '^X11Forwarding'
+    line: 'X11Forwarding no'

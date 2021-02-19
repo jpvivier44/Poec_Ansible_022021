@@ -1,0 +1,11 @@
+---
+- name: PLAY - Install Docker Engine
+  hosts: docker
+  become: true
+
+  vars:
+    docker_users:
+      - deploy
+
+  roles:
+    - docker_3.0.0

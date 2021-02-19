@@ -1,0 +1,21 @@
+---
+- name: CONFIG | Templating .env file
+  template:
+    src: env.j2
+    owner: "{{ _wordpress_app__owner|d(omit) }}"
+    group: "{{ _wordpress_app__group|d(omit) }}"
+    dest: "{{ _wordpress_app__path }}/.env"
+    backup: yes
+  register: env
+  no_log: True
+
+- name: Templating the containers files env
+  template:
+    src: env.stack.j2
+    owner: "{{ _wordpress_app__owner|d(omit) }}"
+    group: "{{ _wordpress_app__group|d(omit) }}"
+    dest: "{{ _wordpress_app__path }}/env/{{ item.service }}.env"
+    backup: yes
+  register: env
+  no_log: True
+  loop: "{{ wordpress_images }}"

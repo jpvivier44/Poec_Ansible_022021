@@ -1,0 +1,9 @@
+
+
+- name: Deploy stack from a compose file
+  community.docker.docker_compose:
+    state: present
+    files:
+      - "{{ service_name }}-compose.yml"
+    project_src: "{{ _wordpress_app__path }}"
+    recreate: always

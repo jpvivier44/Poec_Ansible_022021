@@ -1,0 +1,9 @@
+<VirtualHost *:{{ mon_appli_port }}>
+  ServerAdmin webmaster@localhost
+  DocumentRoot /var/www/{{ mon_appli }}
+
+  Options -Indexes
+
+  ErrorLog /var/log/apache2/{{ mon_appli }}.error.log
+  CustomLog /var/log/apache2/{{ mon_appli }}.access.log combined
+</VirtualHost>

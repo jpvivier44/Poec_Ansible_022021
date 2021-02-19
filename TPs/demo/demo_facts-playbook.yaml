@@ -1,0 +1,20 @@
+---
+- name: PLAY - Demo facts
+  hosts: linux
+
+  tasks:
+
+  # Utilisation de facts recoltes par la task automatique gathering_facts
+  - name: Utilisation d'un fact
+    debug:
+      #msg: "Serveur sur distri: {{ ansible_distribution }}"
+      msg: "Serveur sur distri: {{ ansible_facts.distribution }}"
+
+  # Recuperer la mémoire free des noeuds et afficher un message quand elle est inférieur à une valeur
+  #  appel d'un fact et une conditionnals
+  - name: "Recuperation de la memoire free et message si < 1000"
+    debug:
+      msg: "Oups: ce serveur est un peut light en mémoire free : {{ ansible_facts.memfree_mb }}"
+    #when: ansible_facts.memfree_mb < 1000
+    #when: ansible_facts.memory_mb.real.free < 1000
+    failed_when: ansible_facts.memory_mb.real.free < 1000

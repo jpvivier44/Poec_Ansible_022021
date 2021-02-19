@@ -1,0 +1,51 @@
+---
+- name: PLAY - Deploiement appli micro-service docker
+  hosts: docker
+  become: true
+
+  vars:
+    pip_install_packages:
+      - docker
+
+    dockers:
+      nginx:
+        container_name: "my_nginx"
+        tag: "1.18"
+        image_state: "present"
+        container_state: "started"
+        port: 80
+        published_ports: 8080
+      mariadb:
+        container_name: "my_mariadb"
+        tag: "10.3"
+        image_state: "present"
+        container_state: "started"
+        env:
+          MYSQL_ROOT_PASSWORD: "roottoor"
+      alpine:
+        container_name: "my_alpine"
+        tag: "3.13"
+        image_state: "present"
+        container_state: "started"
+
+  roles:
+    - pip_2.0.0
+
+  tasks:
+    - name: Pull des images docker
+      community.docker.docker_image :
+        name: "{{ item.key }}"
+        tag: "{{ item.value.tag }}"
+        state: "{{ item.value.image_state }}"
+        source: pull
+      loop: "{{ dockers | dict2items }}"
+
+    - name: Creation des conteneurs
+      community.docker.docker_container :
+        name: "{{ item.value.container_name }}"
+        image: "{{ item.key }}:{{ item.value.tag }}"
+        state: "{{ item.value.container_state }}"
+        ports: "{{ item.value.published_ports | default(omit) }}"
+        container_default_behavior: compatibility
+        detach: true
+      loop: "{{ dockers | dict2items }}"

@@ -1,0 +1,6 @@
+---
+# vars file for roles/apache_0.0.1
+liste_pkg:
+  - git
+  - apache2=2.4.38-3+deb10u4
+  - aptitude

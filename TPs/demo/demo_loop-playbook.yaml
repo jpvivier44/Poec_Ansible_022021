@@ -1,0 +1,38 @@
+---
+- name: PLAY - demo loop
+  hosts: srv01
+
+  vars:
+    liste1:
+      - pierre
+      - gege
+    liste2:
+      - rep1
+      - rep2
+      - rep3
+
+    formation_ansible:
+      - status: formateur
+        membres:
+          - name: pierre
+            societe: dawan
+      - status: stagiaire
+        membres:
+          - name: gege
+            societe: gege01
+
+  tasks:
+    # Appel du module debug
+    - name: "Module debug pour test loop : Nested loop"
+      ansible.builtin.debug:
+        msg: "User: {{ item[0] }} - Directory: {{ item[1] }}"
+        verbosity: 2
+      loop: "{{ liste1|product(liste2)|list }}"
+
+    - name: "Module debug pour test loop : subelement"
+      ansible.builtin.debug:
+        msg: |
+             "Stagiaires: {{ item.1.name }}"
+             "Société : {{ item.1.societe }}"
+      loop: "{{ formation_ansible|subelements('membres') }}"
+      when: item.0.status == 'stagiaire'

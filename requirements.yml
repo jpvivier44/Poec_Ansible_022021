@@ -1,0 +1,24 @@
+---
+## GITHUB PERSO
+
+- src: 'git@github.com:psable/require-deploy.git'
+  scm: git
+  name: 'require-deploy_0.0.1'
+
+- src: 'git@gitlab.com:poec_cloud/formation_ansible/roles/apache.git'
+  scm: git
+  version: '0.0.2'
+  name: 'apache_0.0.2'
+
+
+## Role community
+
+- src: 'https://github.com/geerlingguy/ansible-role-docker'
+  scm: git
+  version: '3.0.0'
+  name: 'docker_3.0.0'
+
+- src: 'https://github.com/geerlingguy/ansible-role-pip'
+  scm: git
+  version: '2.0.0'
+  name: 'pip_2.0.0'

@@ -1,0 +1,5 @@
+---
+# defaults file for roles/ansible-role-wordpress
+wordpress_app__git_repo: git@gitlab.com:poec_cloud/formation_ansible/docker-service/wordpress-service.git
+wordpress_app__git_release: master
+wordpress_app__git_update: false
